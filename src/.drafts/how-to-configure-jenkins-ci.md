@@ -1,0 +1,68 @@
+## How to Configure Jenkins-CI
+
+First time configuration should be performed locally to ensure Jenkins is secure before you expose it to the Internet. In other words use Remote Desktop.
+
+- [Setup Security](http://localhost:8080/configureSecurity/)
+    - Enable security: Tick
+    - Jenkins' own user database: Select
+        - Allow users to sign up: Leave as selected. We will turn it off later.
+    - Maxtrix-based security: Select
+        - Give Anonymous Overall Read Access. We will turn it off later.
+        - Add user tim-murphy and click far right icon to select all rights. **USER NAME MUST BE LOWER CASE. JENKINS 1.590.0.0 + PLUGIN UPDATES CANNOT HANDLE TimMurphy**
+        - Click Save.
+        - Click Create an account and create your account :-).
+        - Return to [configure security](http://www.timmurphy.it:8080/configureSecurity/)
+            - Allow users to sign up: Unselect
+            - Anonymous user - Read: Unselect
+- [Install all updates](http://localhost:8080/updateCenter/)
+- [Plugin Manager](http://localhost:8080/pluginManager)
+    - Select All
+    - Download now and install after restart
+    - When **Installing Plugins/Upgrades** page appears select **Restart Jenkins when installation is complete and no jobs are running**
+- [Install Plugins](http://localhost:8080/pluginManager/available)
+    - BitBucket Plugin
+    - MSBuild Plugin
+    - Powershell Plugin
+- [Add Bitbucket Password](http://localhost:8080/credential-store/domain/_/newCredentials)
+    - "SSH Unsername with private key" then select "Select username & password". This works around the Jenkins bug of not showing the user name field.
+    - Username: TimMurphy
+    - Password: see LastPass
+    - Description: TimMurphy@bitbucket
+- [Add Jenkins Backup job](http://localhost:8080/newJob)
+    - Screen 1
+        - Item name: **jenkins-backup**
+        - Select **Freestyle project**
+    - Screen 2
+        - Source Code Management: **Git**
+        - Repository URL: **https://bitbucket.org/timmurphy/hosting-by-tim.git**
+        - Credentials: **required**
+        - Advanced
+            - Name: **hosting-by-tim**
+        - Branch Specifier (blank for 'any'): **refs/heads/master**
+        - Tick **Build when a change is pushed to BitBucket**
+        - Add Build Step **Windows PowerShell**
+            - Command: **.\src\Jenkins\Backup-JenkinsConfiguration.ps1**
+        - Save
+        - Add post-build action **Git Publisher**
+            - Tick **Push Only If Build Succeeds**
+            - Add Branch
+                - Branch to push: **backups**
+                - Target remote name: **hosting-by-tim** *Ignore the "No remote repository configured with name 'hosting-by-tim'" error message. Backup-JenkinsConfiguration.ps1 checkouts the branch for us."*
+    - Click Build Now & confirm job runs.
+- [Configure](http://localhost:8080/configure)
+    - Change the following fields:
+        - MSBuild installations:
+            - Name: v4.0.30319
+            - Path to MSBuild: C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319
+        - Jenkins URL
+        - System Admin e-mail address
+        - E-mail Notification:
+            - SMTP server: smtp.gmail.com
+            - Use SMTP Authentication: Tick
+            - User Name: tim@26tp.com
+            - Password: <generate gmail app password>
+            - Use SSL: Tick
+            - SMTP: 465
+            - Reply-To Address: tim@26tp.com
+            - Test configuration.
+            
